@@ -19,6 +19,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.Objects;
 
+@QuarkusMain
 public class ControllerTest implements QuarkusApplication
 {
   @Inject
@@ -68,45 +69,45 @@ public class ControllerTest implements QuarkusApplication
   {
     @Inject
     KubernetesClient client;
-  }
 
-  @Singleton
-  SharedInformerFactory sharedInformerFactory()
-  {
-    return client.informers();
-  }
-
-  @Singleton
-  SharedIndexInformer<Node> nodeInformer( SharedInformerFactory factory )
-  {
-    return factory.sharedIndexInformerFor(Node.class, 0);
-  }
-
-  @Singleton
-  SharedIndexInformer<Pod> podInformer( SharedInformerFactory factory )
-  {
-    return factory.sharedIndexInformerFor(Pod.class, 0 );
-  }
-
-  @Singleton
-  ResourceEventHandler<Node> nodeReconciler( SharedIndexInformer<Node> nodeInformer, SharedIndexInformer<Pod> podInformer )
-  {
-    return new ResourceEventHandler<>()
+    @Singleton
+    SharedInformerFactory sharedInformerFactory()
     {
-      @Override
-      public void onAdd( Node node )
+      return client.informers();
+    }
+
+    @Singleton
+    SharedIndexInformer<Node> nodeInformer( SharedInformerFactory factory )
+    {
+      return factory.sharedIndexInformerFor(Node.class, 0);
+    }
+
+    @Singleton
+    SharedIndexInformer<Pod> podInformer( SharedInformerFactory factory )
+    {
+      return factory.sharedIndexInformerFor(Pod.class, 0 );
+    }
+
+    @Singleton
+    ResourceEventHandler<Node> nodeReconciler( SharedIndexInformer<Node> nodeInformer, SharedIndexInformer<Pod> podInformer )
+    {
+      return new ResourceEventHandler<>()
       {
-        System.out.printf( "node: %s%n", Objects.requireNonNull( node.getMetadata()).getName());
-        podInformer.getIndexer().list().stream()
-                .map( pod -> Objects.requireNonNull(pod.getMetadata()).getName())
-                .forEach(podName -> System.out.printf("pod name: %s%n", podName ));
-      }
+        @Override
+        public void onAdd( Node node )
+        {
+          System.out.printf( "node: %s%n", Objects.requireNonNull( node.getMetadata()).getName());
+          podInformer.getIndexer().list().stream()
+                  .map( pod -> Objects.requireNonNull(pod.getMetadata()).getName())
+                  .forEach(podName -> System.out.printf("pod name: %s%n", podName ));
+        }
 
-      @Override
-      public void onUpdate(Node odlObj, Node newObj ){}
+        @Override
+        public void onUpdate(Node odlObj, Node newObj ){}
 
-      @Override
-      public void onDelete(Node node, boolean deletedFinalStateUnknown) {}
-    };
+        @Override
+        public void onDelete(Node node, boolean deletedFinalStateUnknown) {}
+      };
+    }
   }
 }
