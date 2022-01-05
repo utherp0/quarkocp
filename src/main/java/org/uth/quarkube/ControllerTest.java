@@ -34,6 +34,8 @@ public class ControllerTest implements QuarkusApplication
   @Override
   public int run( String... args ) throws Exception
   {
+    System.out.println( "Node count: " + client.nodes().list().getItems().size());
+
     try
     {
       client.nodes().list( new ListOptionsBuilder().withLimit(1L).build());
